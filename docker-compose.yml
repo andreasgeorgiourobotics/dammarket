@@ -1,0 +1,47 @@
+services:
+  db:
+    image: mariadb:10.6
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wp
+      MYSQL_USER: wp
+      MYSQL_PASSWORD: wp
+    volumes:
+      - db_data:/var/lib/mysql
+
+  wp:
+    image: wordpress:php8.2-apache
+    ports: [ "8080:80" ]
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_DB_NAME: wp
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content:rw
+
+  wpcli:
+    image: wordpress:cli-php8.2
+    user: "${UID:-1000}:${GID:-1000}"
+    working_dir: /var/www/html
+    depends_on: [ wp ]
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wp
+      WORDPRESS_DB_PASSWORD: wp
+      WORDPRESS_DB_NAME: wp
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content:/var/www/html/wp-content:rw
+
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    restart: unless-stopped
+    ports: [ "8081:80" ]
+    environment:
+      PMA_HOST: db
+
+volumes:
+  db_data:
+  wp_data:
